@@ -31,7 +31,7 @@ module.exports = async function handler(req, res) {
   }
 
   const bgImageTag = bgImage
-    ? `<image x="540" y="0" width="660" height="628" href="${bgImage}" preserveAspectRatio="xMidYMid slice"/>`
+    ? `<image x="600" y="0" width="600" height="628" href="${bgImage}" preserveAspectRatio="xMidYMid slice"/>`
     : '';
 
   const svg = `<svg width="1200" height="628" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
