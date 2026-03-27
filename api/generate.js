@@ -128,10 +128,13 @@ module.exports = async function handler(req, res) {
   }
 
   // Overlay widget — positioned in middle-right of image
-  if (overlayBase64) {
-    const OV_X = IMG_X + 20;
-const OV_Y = IMG_Y + (IMG_H / 2) - 140;
-parts.push('<image x="' + OV_X + '" y="' + OV_Y + '" width="420" height="340" height="200" href="' + overlayBase64 + '" preserveAspectRatio="xMidYMid meet"/>');
+if (overlayBase64) {
+    const isLegal = industry.toLowerCase() === 'legal';
+    const OV_W = isLegal ? 420 : 340;
+    const OV_H = isLegal ? 340 : 200;
+    const OV_X = isLegal ? IMG_X + 20 : IMG_X + 60;
+    const OV_Y = isLegal ? IMG_Y + (IMG_H / 2) - 140 : IMG_Y + (IMG_H / 2) - 80;
+    parts.push('<image x="' + OV_X + '" y="' + OV_Y + '" width="' + OV_W + '" height="' + OV_H + '" href="' + overlayBase64 + '" preserveAspectRatio="xMidYMid meet"/>');
   }
 
   // Clara logo
