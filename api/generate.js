@@ -15,7 +15,7 @@ module.exports = async function handler(req, res) {
   let bgImage = '';
   if (bgImageUrl) {
     try {
-      const imgRes = await fetch(bgImageUrl);
+      const imgRes = await fetch(bgImageUrl, {   redirect: 'follow',   headers: {     'User-Agent': 'Mozilla/5.0'   } });
       const arrayBuffer = await imgRes.arrayBuffer();
       const bytes = new Uint8Array(arrayBuffer);
       let binary = '';
