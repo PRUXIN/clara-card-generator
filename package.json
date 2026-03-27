@@ -3,9 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "echo 'no build needed'"
+    "build": "echo 'built'"
   },
   "dependencies": {
     "@vercel/og": "0.6.2"
+  },
+  "engines": {
+    "node": "18.x"
   }
 }
