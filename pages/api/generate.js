@@ -6,7 +6,7 @@ export const config = {
 
 export default async function handler(req) {
   const { searchParams } = new URL(req.url);
-  
+
   const industry = searchParams.get('industry') || 'accountants';
   const theme = searchParams.get('theme') || 'dark';
   const headline = searchParams.get('headline') || 'Your next client just called.';
@@ -15,13 +15,12 @@ export default async function handler(req) {
   const cta = searchParams.get('cta') || 'Book a Demo';
   const bgImageUrl = searchParams.get('bgImageUrl');
 
-  // Fetch background image and convert to base64
   let bgBase64 = null;
   if (bgImageUrl) {
     try {
       const imgRes = await fetch(bgImageUrl);
       const arrayBuffer = await imgRes.arrayBuffer();
-      const base64 = Buffer.from(arrayBuffer).toString('base64');
+      const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
       const contentType = imgRes.headers.get('content-type') || 'image/jpeg';
       bgBase64 = `data:${contentType};base64,${base64}`;
     } catch (e) {
@@ -48,7 +47,6 @@ export default async function handler(req) {
           overflow: 'hidden',
         }}
       >
-        {/* Background image - right half */}
         {bgBase64 && (
           <img
             src={bgBase64}
@@ -63,7 +61,6 @@ export default async function handler(req) {
           />
         )}
 
-        {/* Gradient overlay */}
         <div
           style={{
             position: 'absolute',
@@ -78,7 +75,6 @@ export default async function handler(req) {
           }}
         />
 
-        {/* Left content */}
         <div
           style={{
             position: 'absolute',
@@ -92,14 +88,7 @@ export default async function handler(req) {
             padding: '60px',
           }}
         >
-          {/* Industry pill */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              marginBottom: '24px',
-            }}
-          >
+          <div style={{ display: 'flex', marginBottom: '24px' }}>
             <div
               style={{
                 backgroundColor: accent,
@@ -116,7 +105,6 @@ export default async function handler(req) {
             </div>
           </div>
 
-          {/* Headline */}
           <div
             style={{
               fontSize: '48px',
@@ -130,7 +118,6 @@ export default async function handler(req) {
             {headline}
           </div>
 
-          {/* Subheadline */}
           <div
             style={{
               fontSize: '20px',
@@ -143,7 +130,6 @@ export default async function handler(req) {
             {subheadline}
           </div>
 
-          {/* Pain stat */}
           <div
             style={{
               fontSize: '16px',
@@ -155,7 +141,6 @@ export default async function handler(req) {
             {painstat}
           </div>
 
-          {/* CTA + URL */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
             <div
               style={{
