@@ -51,7 +51,7 @@ module.exports = async function handler(req, res) {
     </defs>
     <rect x="580" y="36" width="580" height="556" fill="url(#fade)"/>
     <rect x="830" y="357" width="160" height="34" rx="17" fill="#E13A3A"/>
-    <text x="910" y="379" font-family="Arial,sans-serif" font-size="12" font-weight="bold" fill="white" text-anchor="middle" letter-spacing="0.6">📞 MISSED CALL</text>
+    <text x="910" y="379" font-family="Arial,sans-serif" font-size="12" font-weight="bold" fill="white" text-anchor="middle" letter-spacing="0.6">MISSED CALL</text>
   ` : '';
 
   const svg = `<svg width="1200" height="628" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -77,7 +77,7 @@ module.exports = async function handler(req, res) {
     <text x="130" y="430" font-family="Arial,sans-serif" font-size="14" font-weight="bold" fill="#0A0508" text-anchor="middle" letter-spacing="0.5">${cta.toUpperCase()}</text>
 
     <!-- URL -->
-    <text x="40" y="480" font-family="Arial,sans-serif" font-size="14" font-weight="bold" fill="${urlColor}" text-decoration="underline">pruxin.com/clara</text>
+    <text x="130" y="480" font-family="Arial,sans-serif" font-size="14" font-weight="bold" fill="${urlColor}" text-anchor="middle" text-decoration="underline">pruxin.com/clara</text>
   </svg>`;
 
   res.setHeader('Content-Type', 'image/svg+xml');
