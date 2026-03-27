@@ -1,7 +1,5 @@
 {
-  "functions": {
-    "pages/api/generate.js": {
-      "runtime": "edge"
-    }
-  }
+  "buildCommand": "echo 'built'",
+  "outputDirectory": ".",
+  "framework": null
 }
