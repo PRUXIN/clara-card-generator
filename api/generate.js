@@ -7,10 +7,10 @@ module.exports = async function handler(req, res) {
   const cta = req.query.cta || 'Book a Demo';
 
   const industryConfig = {
-    'accountants': { file: 'accountants.jpg', accent: '#C9A84C', label: 'AI FOR ACCOUNTANCY FIRMS', ctaColor: '#C9A84C', ctaTextColor: '#0A0508' },
-    'legal':       { file: 'legal.jpg', accent: '#4573CD', label: 'AI FOR LEGAL PRACTICES', ctaColor: '#4573CD', ctaTextColor: '#FFFFFF' },
-    'realestate':  { file: 'realestate.jpg', accent: '#E07B30', label: 'AI FOR ESTATE AGENTS', ctaColor: '#E07B30', ctaTextColor: '#FFFFFF' },
-    'restaurants': { file: 'restaurants.jpg', accent: '#038D80', label: 'AI FOR HOSPITALITY', ctaColor: '#038D80', ctaTextColor: '#FFFFFF' }
+    'accountants': { file: 'accountants.png', accent: '#C9A84C', label: 'AI FOR ACCOUNTANCY FIRMS', ctaColor: '#C9A84C', ctaTextColor: '#0A0508' },
+    'legal':       { file: 'legal.png', accent: '#4573CD', label: 'AI FOR LEGAL PRACTICES', ctaColor: '#4573CD', ctaTextColor: '#FFFFFF' },
+    'realestate':  { file: 'realestate.png', accent: '#E07B30', label: 'AI FOR ESTATE AGENTS', ctaColor: '#E07B30', ctaTextColor: '#FFFFFF' },
+    'restaurants': { file: 'restaurants.png', accent: '#038D80', label: 'AI FOR HOSPITALITY', ctaColor: '#038D80', ctaTextColor: '#FFFFFF' }
   };
 
   const config = industryConfig[industry.toLowerCase()] || industryConfig['accountants'];
