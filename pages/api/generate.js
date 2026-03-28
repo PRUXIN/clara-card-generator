@@ -1,7 +1,7 @@
 import { ImageResponse } from '@vercel/og';
 
 export default async function handler(req) {
-  const { searchParams } = new URL(req.url);
+  const searchParams = { get: (key) => req.query[key] || null };
 
   const industry = searchParams.get('industry') || 'accountants';
   const theme = searchParams.get('theme') || 'light';
