@@ -1,10 +1,18 @@
-module.exports = async function handler(req, res) {
-  const industry = req.query.industry || 'accountants';
-  const theme = req.query.theme || 'light';
-  const headline = req.query.headline || 'Your phones ring at 9pm. Clara answers.';
-  const subheadline = req.query.subheadline || 'Never miss a new client enquiry.';
-  const painstat = req.query.painstat || '62% of clients switch firms due to poor communication';
-  const cta = req.query.cta || 'Book a Demo';
+import { ImageResponse } from '@vercel/og';
+
+export const config = {
+  runtime: 'edge',
+};
+
+export default async function handler(req) {
+  const { searchParams } = new URL(req.url);
+
+  const industry = searchParams.get('industry') || 'accountants';
+  const theme = searchParams.get('theme') || 'light';
+  const headline = searchParams.get('headline') || 'Your phones ring at 9pm. Clara answers.';
+  const subheadline = searchParams.get('subheadline') || 'Never miss a new client enquiry.';
+  const painstat = searchParams.get('painstat') || '62% of clients switch firms due to poor communication';
+  const cta = searchParams.get('cta') || 'Book a Demo';
 
   const industryConfig = {
     'accountants': { file: 'Accountants.png', accent: '#C9A84C', label: 'AI FOR ACCOUNTANCY FIRMS', ctaColor: '#C9A84C', ctaTextColor: '#0A0508' },
@@ -17,7 +25,7 @@ module.exports = async function handler(req, res) {
   const isDark = theme === 'dark';
   const bg = isDark ? '#07091A' : '#FFFFFF';
   const textColor = isDark ? '#FFFFFF' : '#0A0508';
-  const subColor = isDark ? '#AAAACC' : '#444444';
+  const subColor = isDark ? '#AAAACC' : '#555555';
   const urlColor = isDark ? '#8899BB' : '#132F67';
   const accent = config.accent;
   const baseUrl = 'https://raw.githubusercontent.com/PRUXIN/clara-card-generator/main/assets';
@@ -26,146 +34,150 @@ module.exports = async function handler(req, res) {
     try {
       const r = await fetch(baseUrl + '/' + encodeURIComponent(filename));
       const ab = await r.arrayBuffer();
-      const bytes = new Uint8Array(ab);
-      let bin = '';
-      for (let i = 0; i < bytes.byteLength; i++) bin += String.fromCharCode(bytes[i]);
-      return 'data:image/png;base64,' + Buffer.from(bin, 'binary').toString('base64');
+      return ab;
     } catch (e) { return null; }
   }
 
   const logoFile = isDark ? 'clara-logo-light.png' : 'clara-logo-dark.png';
-  const [bgBase64, logoBase64, overlayBase64] = await Promise.all([
+  const [bgBuffer, logoBuffer, overlayBuffer] = await Promise.all([
     fetchBase64(config.file),
     fetchBase64(logoFile),
     fetchBase64('overlay-' + industry.toLowerCase() + '.png')
   ]);
 
-  // Headline split
+  const bgSrc = bgBuffer ? `data:image/png;base64,${Buffer.from(bgBuffer).toString('base64')}` : null;
+  const logoSrc = logoBuffer ? `data:image/png;base64,${Buffer.from(logoBuffer).toString('base64')}` : null;
+  const overlaySrc = overlayBuffer ? `data:image/png;base64,${Buffer.from(overlayBuffer).toString('base64')}` : null;
+
+  // Smart headline split
   let lines = [];
   if (headline.replace(/\.$/, '').includes('.')) {
-    lines = headline.split('.').filter(function(s) { return s.trim(); }).map(function(s) { return s.trim() + '.'; });
+    lines = headline.split('.').filter(s => s.trim()).map(s => s.trim() + '.');
   } else {
     const words = headline.split(' ');
     const mid = Math.ceil(words.length / 2);
-    lines = [words.slice(0, mid).join(' '), words.slice(mid).join(' ')].filter(function(l) { return l; });
+    lines = [words.slice(0, mid).join(' '), words.slice(mid).join(' ')].filter(l => l);
   }
 
-  // ─── LAYOUT CONSTANTS ───────────────────────────────
-  // Card
-  const CARD_W = 1200;
-  const CARD_H = 628;
+  return new ImageResponse(
+    (
+      <div
+        style={{
+          width: '1200px',
+          height: '628px',
+          display: 'flex',
+          backgroundColor: bg,
+          position: 'relative',
+          overflow: 'hidden',
+          fontFamily: 'sans-serif',
+        }}
+      >
+        {/* Background image — right side */}
+        {bgSrc && (
+          <div style={{
+            position: 'absolute',
+            right: 0,
+            top: 0,
+            width: '600px',
+            height: '628px',
+            display: 'flex',
+          }}>
+            <img src={bgSrc} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            {/* Gradient fade */}
+            <div style={{
+              position: 'absolute',
+              top: 0, left: 0,
+              width: '100%', height: '100%',
+              background: 'linear-gradient(to right, ' + bg + ' 0%, transparent 50%)',
+              display: 'flex',
+            }} />
+          </div>
+        )}
 
-  // Logo — 40px from top-left
-  const LOGO_X = 40;
-  const LOGO_Y = 40;
-  const LOGO_W = 148;
-  const LOGO_H = 42;
+        {/* Overlay widget */}
+        {overlaySrc && (
+          <img src={overlaySrc} style={{
+            position: 'absolute',
+            right: '40px',
+            top: '200px',
+            width: '340px',
+            height: 'auto',
+            objectFit: 'contain',
+          }} />
+        )}
 
-  // Content zone — starts below logo area
-  // Top: 102px (40 logo + 20 gap = ~100, round to 102 per spec)
-  // Left: 40px, Right edge: 560px (content width 520px)
-  // Bottom: CARD_H - 52 = 576px
-  const CZ_X = 40;
-  const CZ_TOP = 115;
-  const CZ_BOTTOM = CARD_H - 52; // 576
-  const CZ_H = CZ_BOTTOM - CZ_TOP; // 474
+        {/* Left content */}
+        <div style={{
+          position: 'absolute',
+          left: 0, top: 0,
+          width: '600px', height: '628px',
+          display: 'flex',
+          flexDirection: 'column',
+          padding: '40px',
+        }}>
+          {/* Logo */}
+          {logoSrc && (
+            <img src={logoSrc} style={{ width: '148px', height: '42px', objectFit: 'contain', marginBottom: '20px' }} />
+          )}
 
-  // Image container — right side
-  // x: 600 (40 + 520 + 40), y: 77 (102 - 25 top offset), w: 560, h: 474
-  const IMG_X = 600;
-  const IMG_Y = 77;
-  const IMG_W = 560;
-  const IMG_H = 474;
+          {/* Industry pill */}
+          <div style={{
+            display: 'flex',
+            border: '1.5px solid ' + accent,
+            borderRadius: '17px',
+            padding: '8px 16px',
+            marginBottom: '20px',
+            alignSelf: 'flex-start',
+          }}>
+            <span style={{ color: accent, fontSize: '11px', fontWeight: 'bold', letterSpacing: '1px' }}>
+              {config.label}
+            </span>
+          </div>
 
-  // Content elements — stacked from CZ_TOP with exact gaps
-  const PILL_H = 34;
-  const PILL_W = config.label.length * 7.5 + 32;
-  const PILL_Y = CZ_TOP;
+          {/* Headline */}
+          <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '16px' }}>
+            {lines.map((line, i) => (
+              <span key={i} style={{
+                fontSize: '46px',
+                fontWeight: 'bold',
+                color: textColor,
+                lineHeight: 1.15,
+                letterSpacing: '-2px',
+              }}>
+                {line}
+              </span>
+            ))}
+          </div>
 
-  // Gap between pill and headline: 16px
-  const LINE_H = 56;
-  const HEADLINE_Y = PILL_Y + PILL_H + 22 + 46;
-  const HEADLINE_END_Y = HEADLINE_Y + lines.length * LINE_H;
+          {/* Subheadline */}
+          <div style={{ fontSize: '17px', color: subColor, marginBottom: '16px', lineHeight: 1.5 }}>
+            {subheadline}
+          </div>
 
-  // Gap between headline and subheadline: 16px
-  const SUB_Y = HEADLINE_END_Y + 16;
-  const SUB_H = 26;
+          {/* Pain stat */}
+          <div style={{ fontSize: '15px', fontWeight: 'bold', color: accent, marginBottom: '32px' }}>
+            {painstat}
+          </div>
 
-  // Gap between subheadline and stat: 32px
-  const STAT_Y = SUB_Y + SUB_H + 32;
-  const STAT_H = 24;
-
-  // CTA group (button + link with 16px gap) — pinned to bottom with 40px margin
-  const BTN_W = 230;
-  const BTN_H = 48;
-  const LINK_H = 20;
-  const CTA_GROUP_H = BTN_H + 16 + LINK_H; // 84px
-
-  // Position CTA group — use auto spacing but cap at bottom boundary
-  let BTN_Y = STAT_Y + STAT_H + 32;
-  const maxBtnY = CZ_BOTTOM - CTA_GROUP_H; // can't go below this
-  if (BTN_Y > maxBtnY) BTN_Y = maxBtnY;
-  const LINK_Y = BTN_Y + BTN_H + 16 + 14; // +14 for text baseline
-
-  // ─── BUILD SVG ──────────────────────────────────────
-  const parts = [];
-  parts.push('<svg width="' + CARD_W + '" height="' + CARD_H + '" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">');
-
-  // Background
-  parts.push('<rect width="' + CARD_W + '" height="' + CARD_H + '" fill="' + bg + '"/>');
-
-  // Image — right side with gradient fade
-  if (bgBase64) {
-    parts.push('<defs>');
-    parts.push('<clipPath id="imgClip"><rect x="' + IMG_X + '" y="' + IMG_Y + '" width="' + IMG_W + '" height="' + IMG_H + '" rx="16"/></clipPath>');
-    parts.push('<linearGradient id="fade" x1="0%" y1="0%" x2="100%" y2="0%">');
-    parts.push('<stop offset="0%" style="stop-color:' + bg + ';stop-opacity:1"/>');
-    parts.push('<stop offset="35%" style="stop-color:' + bg + ';stop-opacity:0"/>');
-    parts.push('</linearGradient>');
-    parts.push('</defs>');
-    parts.push('<image x="' + IMG_X + '" y="' + IMG_Y + '" width="' + IMG_W + '" height="' + IMG_H + '" href="' + bgBase64 + '" preserveAspectRatio="xMidYMid slice" clip-path="url(#imgClip)" opacity="0.9"/>');
-    parts.push('<rect x="' + IMG_X + '" y="' + IMG_Y + '" width="' + IMG_W + '" height="' + IMG_H + '" fill="url(#fade)"/>');
-  }
-
-  // Overlay widget — positioned in middle-right of image
-if (overlayBase64) {
-    const isLegal = industry.toLowerCase() === 'legal';
-    const OV_W = isLegal ? 420 : 340;
-    const OV_H = isLegal ? 340 : 200;
-    const OV_X = isLegal ? IMG_X + 20 : IMG_X + 60;
-    const OV_Y = isLegal ? IMG_Y + (IMG_H / 2) - 140 : IMG_Y + (IMG_H / 2) - 80;
-    parts.push('<image x="' + OV_X + '" y="' + OV_Y + '" width="' + OV_W + '" height="' + OV_H + '" href="' + overlayBase64 + '" preserveAspectRatio="xMidYMid meet"/>');
-  }
-
-  // Clara logo
-  if (logoBase64) {
-    parts.push('<image x="' + LOGO_X + '" y="' + LOGO_Y + '" width="' + LOGO_W + '" height="' + LOGO_H + '" href="' + logoBase64 + '" preserveAspectRatio="xMinYMid meet"/>');
-  }
-
-  // Industry pill
-  parts.push('<rect x="' + CZ_X + '" y="' + PILL_Y + '" width="' + PILL_W + '" height="' + PILL_H + '" rx="17" fill="none" stroke="' + accent + '" stroke-width="1.5"/>');
-  parts.push('<text x="' + (CZ_X + PILL_W / 2) + '" y="' + (PILL_Y + PILL_H / 2 + 4) + '" font-family="Arial,sans-serif" font-size="11" font-weight="bold" fill="' + accent + '" text-anchor="middle" letter-spacing="1">' + config.label + '</text>');
-
-  // Headline
-  lines.forEach(function(line, i) {
-    parts.push('<text x="' + CZ_X + '" y="' + (HEADLINE_Y + i * LINE_H) + '" font-family="Arial,sans-serif" font-size="46" font-weight="bold" fill="' + textColor + '" letter-spacing="-2">' + line + '</text>');
-  });
-
-  // Subheadline
-  parts.push('<text x="' + CZ_X + '" y="' + SUB_Y + '" font-family="Arial,sans-serif" font-size="17" fill="' + subColor + '">' + subheadline + '</text>');
-
-  // Pain stat
-  parts.push('<text x="' + CZ_X + '" y="' + STAT_Y + '" font-family="Arial,sans-serif" font-size="15" font-weight="bold" fill="' + accent + '">' + painstat + '</text>');
-
-  // CTA button
-  parts.push('<rect x="' + CZ_X + '" y="' + BTN_Y + '" width="' + BTN_W + '" height="' + BTN_H + '" rx="24" fill="' + config.ctaColor + '"/>');
-  parts.push('<text x="' + (CZ_X + BTN_W / 2) + '" y="' + (BTN_Y + BTN_H / 2 + 5) + '" font-family="Arial,sans-serif" font-size="13" font-weight="bold" fill="' + config.ctaTextColor + '" text-anchor="middle" letter-spacing="0.5">' + cta.toUpperCase() + '</text>');
-
-  // URL link
-  parts.push('<text x="' + (CZ_X + BTN_W / 2) + '" y="' + LINK_Y + '" font-family="Arial,sans-serif" font-size="13" font-weight="bold" fill="' + urlColor + '" text-anchor="middle" text-decoration="underline">pruxin.com/clara</text>');
-
-  parts.push('</svg>');
-
-  res.setHeader('Content-Type', 'image/svg+xml');
-  res.status(200).send(parts.join('\n'));
-};
+          {/* CTA + URL */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '16px' }}>
+            <div style={{
+              backgroundColor: config.ctaColor,
+              borderRadius: '24px',
+              padding: '14px 32px',
+              display: 'flex',
+            }}>
+              <span style={{ color: config.ctaTextColor, fontSize: '13px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+                {cta.toUpperCase()}
+              </span>
+            </div>
+            <span style={{ fontSize: '13px', fontWeight: 'bold', color: urlColor, textDecoration: 'underline' }}>
+              pruxin.com/clara
+            </span>
+          </div>
+        </div>
+      </div>
+    ),
+    { width: 1200, height: 628 }
+  );
+}
