@@ -92,22 +92,32 @@ module.exports = async function handler(req, res) {
   const isInstagram = platform === 'instagram';
   const subLines = splitSub(subheadline, isInstagram ? 50 : 45);
 
- // ── LINKEDIN / FACEBOOK (1200×628) ─────────────────────
+// ── LINKEDIN / FACEBOOK (1200×628) ─────────────────────
   if (!isInstagram) {
     const CARD_W = 1200;
     const CARD_H = 628;
     const PAD = 40;
 
-    // Logo
-    const LOGO_Y = 40;
+    // Logo — sits ABOVE content zone, outside it
+    const LOGO_Y = 16;
     const LOGO_H = 42;
 
-    // Pill: 20px below logo
-    const PILL_Y = LOGO_Y + LOGO_H + 20;   // 102
+    // Content zone — shared top/bottom for both left text and right image
+    const CZ_TOP = LOGO_Y + LOGO_H + 14;   // 72
+    const CZ_BOTTOM = CARD_H - 16;          // 612
+
+    // Image — right side, full content zone height
+    const IMG_X = 600;
+    const IMG_Y = CZ_TOP;
+    const IMG_W = 584;
+    const IMG_H = CZ_BOTTOM - CZ_TOP;       // 540
+
+    // Left content — starts 16px inside content zone
+    const PILL_Y = CZ_TOP + 16;             // 88
     const PILL_H = 34;
     const pillWidth = config.label.length * 7.5 + 32;
 
-    // Headline: 16px below pill + font baseline offset
+    // Headline: 16px below pill + 46px baseline
     const HL_FONT = 46;
     const HL_LINE_H = 56;
     const HEADLINE_Y = PILL_Y + PILL_H + 16 + HL_FONT;
@@ -125,40 +135,42 @@ module.exports = async function handler(req, res) {
     // URL pinned 40px from card bottom
     const BTN_H = 48;
     const BTN_W = 230;
-    const URL_Y_PINNED = CARD_H - PAD;           // 588
-    const BTN_Y_PINNED = URL_Y_PINNED - 16 - BTN_H; // 524
-
-    // If content is too long, flow naturally instead
+    const URL_Y = CARD_H - PAD;             // 588 always
+    // BTN: 24px above URL (breathing space)
+    const BTN_Y_PINNED = URL_Y - 24 - BTN_H; // 516
+    // If content overflows, flow naturally below stat
     const BTN_Y_NATURAL = STAT_Y + 32;
     const BTN_Y = Math.max(BTN_Y_PINNED, BTN_Y_NATURAL);
-    const URL_Y = BTN_Y + BTN_H + 16;
 
     const parts = [];
     parts.push('<svg width="' + CARD_W + '" height="' + CARD_H + '" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">');
     parts.push('<rect width="' + CARD_W + '" height="' + CARD_H + '" fill="' + bg + '"/>');
 
+    // Image — right side with gradient fade
     if (bgBase64) {
       parts.push('<defs>');
-      parts.push('<clipPath id="imgClip"><rect x="540" y="36" width="620" height="556" rx="16"/></clipPath>');
+      parts.push('<clipPath id="imgClip"><rect x="' + IMG_X + '" y="' + IMG_Y + '" width="' + IMG_W + '" height="' + IMG_H + '" rx="16"/></clipPath>');
       parts.push('<linearGradient id="fade" x1="0%" y1="0%" x2="100%" y2="0%">');
       parts.push('<stop offset="0%" style="stop-color:' + bg + ';stop-opacity:1"/>');
-      parts.push('<stop offset="45%" style="stop-color:' + bg + ';stop-opacity:0"/>');
+      parts.push('<stop offset="40%" style="stop-color:' + bg + ';stop-opacity:0"/>');
       parts.push('</linearGradient>');
       parts.push('</defs>');
-      parts.push('<image x="540" y="36" width="620" height="556" href="' + bgBase64 + '" preserveAspectRatio="xMidYMid slice" clip-path="url(#imgClip)" opacity="0.9"/>');
-      parts.push('<rect x="540" y="36" width="620" height="556" fill="url(#fade)"/>');
+      parts.push('<image x="' + IMG_X + '" y="' + IMG_Y + '" width="' + IMG_W + '" height="' + IMG_H + '" href="' + bgBase64 + '" preserveAspectRatio="xMidYMid slice" clip-path="url(#imgClip)" opacity="0.9"/>');
+      parts.push('<rect x="' + IMG_X + '" y="' + IMG_Y + '" width="' + IMG_W + '" height="' + IMG_H + '" fill="url(#fade)"/>');
     }
 
+    // Overlay
     if (overlayBase64) {
       const ind = industry.toLowerCase();
       const isLegal = ind === 'legal';
       const OV_W = isLegal ? 420 : 340;
       const OV_H = isLegal ? 340 : 200;
       const OV_X = ind === 'accountants' ? 780 : isLegal ? 600 : 660;
-      const OV_Y = ind === 'accountants' ? 360 : isLegal ? 150 : 210;
+      const OV_Y = ind === 'accountants' ? 380 : isLegal ? 160 : 220;
       parts.push('<image x="' + OV_X + '" y="' + OV_Y + '" width="' + OV_W + '" height="' + OV_H + '" href="' + overlayBase64 + '" preserveAspectRatio="xMidYMid meet"/>');
     }
 
+    // Clara logo — ABOVE content zone
     if (logoBase64) {
       parts.push('<image x="' + PAD + '" y="' + LOGO_Y + '" width="148" height="42" href="' + logoBase64 + '" preserveAspectRatio="xMinYMid meet"/>');
     }
@@ -184,8 +196,8 @@ module.exports = async function handler(req, res) {
     parts.push('<rect x="' + PAD + '" y="' + BTN_Y + '" width="' + BTN_W + '" height="' + BTN_H + '" rx="24" fill="' + config.ctaColor + '"/>');
     parts.push('<text x="' + (PAD + BTN_W / 2) + '" y="' + (BTN_Y + BTN_H / 2 + 5) + '" font-family="Arial,sans-serif" font-size="13" font-weight="bold" fill="' + config.ctaTextColor + '" text-anchor="middle" letter-spacing="0.5">' + cta.toUpperCase() + '</text>');
 
-    // URL — centred under button
-    parts.push('<text x="' + (PAD + BTN_W / 2) + '" y="' + URL_Y + '" font-family="Arial,sans-serif" font-size="13" font-weight="bold" fill="' + urlColor + '" text-anchor="middle" text-decoration="underline">pruxin.com/clara</text>');
+    // URL — 24px below button, centred under it
+    parts.push('<text x="' + (PAD + BTN_W / 2) + '" y="' + (BTN_Y + BTN_H + 24) + '" font-family="Arial,sans-serif" font-size="13" font-weight="bold" fill="' + urlColor + '" text-anchor="middle" text-decoration="underline">pruxin.com/clara</text>');
 
     parts.push('</svg>');
     res.setHeader('Content-Type', 'image/svg+xml');
