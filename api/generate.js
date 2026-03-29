@@ -92,13 +92,13 @@ module.exports = async function handler(req, res) {
   const isInstagram = platform === 'instagram';
   const subLines = splitSub(subheadline, isInstagram ? 50 : 45);
 
-  // ── LINKEDIN / FACEBOOK (1200×628) ─────────────────────
+ // ── LINKEDIN / FACEBOOK (1200×628) ─────────────────────
   if (!isInstagram) {
     const CARD_W = 1200;
     const CARD_H = 628;
     const PAD = 40;
 
-    // Logo: 40px from top-left
+    // Logo
     const LOGO_Y = 40;
     const LOGO_H = 42;
 
@@ -107,28 +107,31 @@ module.exports = async function handler(req, res) {
     const PILL_H = 34;
     const pillWidth = config.label.length * 7.5 + 32;
 
-    // Headline: 16px below pill + 46px baseline
+    // Headline: 16px below pill + font baseline offset
     const HL_FONT = 46;
     const HL_LINE_H = 56;
-    const HEADLINE_Y = PILL_Y + PILL_H + 16 + HL_FONT;            // 198
+    const HEADLINE_Y = PILL_Y + PILL_H + 16 + HL_FONT;
     const HEADLINE_END = HEADLINE_Y + (lines.length - 1) * HL_LINE_H;
 
-    // Subheadline: 16px below headline + 17px baseline
+    // Subheadline: 16px below headline
     const SUB_FONT = 17;
     const SUB_LINE_H = 26;
     const SUB_Y = HEADLINE_END + 16 + SUB_FONT;
-
-    // Stat: 32px below last sub line + 15px baseline
     const lastSubY = subLines.length > 1 ? SUB_Y + SUB_LINE_H : SUB_Y;
+
+    // Stat: 32px below last sub line
     const STAT_Y = lastSubY + 32 + 15;
 
-    // CTA button: 28px below stat
-    const BTN_W = 230;
+    // URL pinned 40px from card bottom
     const BTN_H = 48;
-    const BTN_Y = STAT_Y + 28;
+    const BTN_W = 230;
+    const URL_Y_PINNED = CARD_H - PAD;           // 588
+    const BTN_Y_PINNED = URL_Y_PINNED - 16 - BTN_H; // 524
 
-    // URL: 20px below button
-    const URL_Y = BTN_Y + BTN_H + 20;
+    // If content is too long, flow naturally instead
+    const BTN_Y_NATURAL = STAT_Y + 32;
+    const BTN_Y = Math.max(BTN_Y_PINNED, BTN_Y_NATURAL);
+    const URL_Y = BTN_Y + BTN_H + 16;
 
     const parts = [];
     parts.push('<svg width="' + CARD_W + '" height="' + CARD_H + '" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">');
@@ -160,27 +163,35 @@ module.exports = async function handler(req, res) {
       parts.push('<image x="' + PAD + '" y="' + LOGO_Y + '" width="148" height="42" href="' + logoBase64 + '" preserveAspectRatio="xMinYMid meet"/>');
     }
 
+    // Pill
     parts.push('<rect x="' + PAD + '" y="' + PILL_Y + '" width="' + pillWidth + '" height="' + PILL_H + '" rx="17" fill="none" stroke="' + accent + '" stroke-width="1.5"/>');
     parts.push('<text x="' + (PAD + pillWidth / 2) + '" y="' + (PILL_Y + PILL_H / 2 + 5) + '" font-family="Arial,sans-serif" font-size="11" font-weight="bold" fill="' + accent + '" text-anchor="middle" letter-spacing="1">' + config.label + '</text>');
 
+    // Headline
     lines.forEach(function(line, i) {
       parts.push('<text x="' + PAD + '" y="' + (HEADLINE_Y + i * HL_LINE_H) + '" font-family="Arial,sans-serif" font-size="' + HL_FONT + '" font-weight="900" fill="' + textColor + '" letter-spacing="-2">' + line + '</text>');
     });
 
+    // Subheadline
     subLines.forEach(function(line, i) {
       parts.push('<text x="' + PAD + '" y="' + (SUB_Y + i * SUB_LINE_H) + '" font-family="Arial,sans-serif" font-size="' + SUB_FONT + '" fill="' + subColor + '">' + line + '</text>');
     });
 
+    // Stat
     parts.push('<text x="' + PAD + '" y="' + STAT_Y + '" font-family="Arial,sans-serif" font-size="15" font-weight="bold" fill="' + accent + '">' + painstat + '</text>');
+
+    // CTA button
     parts.push('<rect x="' + PAD + '" y="' + BTN_Y + '" width="' + BTN_W + '" height="' + BTN_H + '" rx="24" fill="' + config.ctaColor + '"/>');
     parts.push('<text x="' + (PAD + BTN_W / 2) + '" y="' + (BTN_Y + BTN_H / 2 + 5) + '" font-family="Arial,sans-serif" font-size="13" font-weight="bold" fill="' + config.ctaTextColor + '" text-anchor="middle" letter-spacing="0.5">' + cta.toUpperCase() + '</text>');
-    parts.push('<text x="' + (PAD + BTN_W / 2) + '" y="' + URL_Y + '" font-family="Arial,sans-serif" font-size="13" font-weight="bold" fill="' + urlColor + '" text-anchor="middle" text-decoration="underline">pruxin.com/clara</text>');
-    parts.push('</svg>');
 
+    // URL — centred under button
+    parts.push('<text x="' + (PAD + BTN_W / 2) + '" y="' + URL_Y + '" font-family="Arial,sans-serif" font-size="13" font-weight="bold" fill="' + urlColor + '" text-anchor="middle" text-decoration="underline">pruxin.com/clara</text>');
+
+    parts.push('</svg>');
     res.setHeader('Content-Type', 'image/svg+xml');
     return res.status(200).send(parts.join('\n'));
   }
-
+  
   // ── INSTAGRAM (1080×1080) ───────────────────────────────
   const CARD_W = 1080;
   const CARD_H = 1080;
