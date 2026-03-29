@@ -98,11 +98,18 @@ module.exports = async function handler(req, res) {
     const CARD_H = 628;
     const PAD = 40;
 
+    // LinkedIn: always split by words, max 3 per line
+    const liWords = headline.split(' ');
+    const liLines = [];
+    for (let i = 0; i < liWords.length; i += 3) {
+      liLines.push(liWords.slice(i, i + 3).join(' '));
+    }
+
     // Logo — sits ABOVE content zone, outside it
     const LOGO_Y = 16;
     const LOGO_H = 42;
 
-    // Content zone — shared top/bottom for both left text and right image
+    // Content zone
     const CZ_TOP = LOGO_Y + LOGO_H + 14;   // 72
     const CZ_BOTTOM = CARD_H - 16;          // 612
 
@@ -112,16 +119,16 @@ module.exports = async function handler(req, res) {
     const IMG_W = 584;
     const IMG_H = CZ_BOTTOM - CZ_TOP;       // 540
 
-    // Left content — starts 16px inside content zone
+    // Pill: 16px inside content zone
     const PILL_Y = CZ_TOP + 16;             // 88
     const PILL_H = 34;
     const pillWidth = config.label.length * 7.5 + 32;
 
-    // Headline: 16px below pill + 46px baseline
+    // Headline: 16px below pill + 56px baseline
     const HL_FONT = 56;
     const HL_LINE_H = 68;
     const HEADLINE_Y = PILL_Y + PILL_H + 16 + HL_FONT;
-    const HEADLINE_END = HEADLINE_Y + (lines.length - 1) * HL_LINE_H;
+    const HEADLINE_END = HEADLINE_Y + (liLines.length - 1) * HL_LINE_H;
 
     // Subheadline: 16px below headline
     const SUB_FONT = 17;
@@ -136,9 +143,7 @@ module.exports = async function handler(req, res) {
     const BTN_H = 48;
     const BTN_W = 230;
     const URL_Y = CARD_H - PAD;             // 588 always
-    // BTN: 24px above URL (breathing space)
     const BTN_Y_PINNED = URL_Y - 24 - BTN_H; // 516
-    // If content overflows, flow naturally below stat
     const BTN_Y_NATURAL = STAT_Y + 32;
     const BTN_Y = Math.max(BTN_Y_PINNED, BTN_Y_NATURAL);
 
@@ -146,7 +151,6 @@ module.exports = async function handler(req, res) {
     parts.push('<svg width="' + CARD_W + '" height="' + CARD_H + '" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">');
     parts.push('<rect width="' + CARD_W + '" height="' + CARD_H + '" fill="' + bg + '"/>');
 
-    // Image — right side with gradient fade
     if (bgBase64) {
       parts.push('<defs>');
       parts.push('<clipPath id="imgClip"><rect x="' + IMG_X + '" y="' + IMG_Y + '" width="' + IMG_W + '" height="' + IMG_H + '" rx="16"/></clipPath>');
@@ -159,7 +163,6 @@ module.exports = async function handler(req, res) {
       parts.push('<rect x="' + IMG_X + '" y="' + IMG_Y + '" width="' + IMG_W + '" height="' + IMG_H + '" fill="url(#fade)"/>');
     }
 
-    // Overlay
     if (overlayBase64) {
       const ind = industry.toLowerCase();
       const isLegal = ind === 'legal';
@@ -170,33 +173,26 @@ module.exports = async function handler(req, res) {
       parts.push('<image x="' + OV_X + '" y="' + OV_Y + '" width="' + OV_W + '" height="' + OV_H + '" href="' + overlayBase64 + '" preserveAspectRatio="xMidYMid meet"/>');
     }
 
-    // Clara logo — ABOVE content zone
     if (logoBase64) {
       parts.push('<image x="' + PAD + '" y="' + LOGO_Y + '" width="148" height="42" href="' + logoBase64 + '" preserveAspectRatio="xMinYMid meet"/>');
     }
 
-    // Pill
     parts.push('<rect x="' + PAD + '" y="' + PILL_Y + '" width="' + pillWidth + '" height="' + PILL_H + '" rx="17" fill="none" stroke="' + accent + '" stroke-width="1.5"/>');
     parts.push('<text x="' + (PAD + pillWidth / 2) + '" y="' + (PILL_Y + PILL_H / 2 + 5) + '" font-family="Arial,sans-serif" font-size="11" font-weight="bold" fill="' + accent + '" text-anchor="middle" letter-spacing="1">' + config.label + '</text>');
 
-    // Headline
-    lines.forEach(function(line, i) {
+    liLines.forEach(function(line, i) {
       parts.push('<text x="' + PAD + '" y="' + (HEADLINE_Y + i * HL_LINE_H) + '" font-family="Arial,sans-serif" font-size="' + HL_FONT + '" font-weight="900" fill="' + textColor + '" letter-spacing="-2">' + line + '</text>');
     });
 
-    // Subheadline
     subLines.forEach(function(line, i) {
       parts.push('<text x="' + PAD + '" y="' + (SUB_Y + i * SUB_LINE_H) + '" font-family="Arial,sans-serif" font-size="' + SUB_FONT + '" fill="' + subColor + '">' + line + '</text>');
     });
 
-    // Stat
     parts.push('<text x="' + PAD + '" y="' + STAT_Y + '" font-family="Arial,sans-serif" font-size="15" font-weight="bold" fill="' + accent + '">' + painstat + '</text>');
 
-    // CTA button
     parts.push('<rect x="' + PAD + '" y="' + BTN_Y + '" width="' + BTN_W + '" height="' + BTN_H + '" rx="24" fill="' + config.ctaColor + '"/>');
     parts.push('<text x="' + (PAD + BTN_W / 2) + '" y="' + (BTN_Y + BTN_H / 2 + 5) + '" font-family="Arial,sans-serif" font-size="13" font-weight="bold" fill="' + config.ctaTextColor + '" text-anchor="middle" letter-spacing="0.5">' + cta.toUpperCase() + '</text>');
 
-    // URL — 24px below button, centred under it
     parts.push('<text x="' + (PAD + BTN_W / 2) + '" y="' + (BTN_Y + BTN_H + 24) + '" font-family="Arial,sans-serif" font-size="13" font-weight="bold" fill="' + urlColor + '" text-anchor="middle" text-decoration="underline">pruxin.com/clara</text>');
 
     parts.push('</svg>');
