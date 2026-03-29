@@ -243,3 +243,4 @@ module.exports = async function handler(req, res) {
 
   res.setHeader('Content-Type', 'image/svg+xml');
   res.status(200).send(parts.join('\n'));
+};
