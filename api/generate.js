@@ -164,7 +164,7 @@ module.exports = async function handler(req, res) {
   // Pill row (label + URL) — 20px gap after image
   const PILL_Y = IMG_BOTTOM + GAP;
   const PILL_H = 37;
-  const PILL_TEXT_Y = PILL_Y + 10 + 13; // top padding + approx text baseline
+  const PILL_TEXT_Y = PILL_Y + PILL_Y + 25; // top padding + approx text baseline
 
   // Headline — 20px gap after pill
   const LINE_H = 87; // 72px font * 1.2 line-height
@@ -182,11 +182,8 @@ module.exports = async function handler(req, res) {
 
   // CTA button — 20px gap after stat
   // button padding: 24px top/bottom, so height = 24+31+24 = ~79px, use 80
-  const BTN_H = 80;
-  // Pin CTA to bottom with 40px margin, or use calculated position — whichever is lower
-  const BTN_Y_CALC = STAT_Y + GAP;
-  const BTN_Y_PINNED = CARD_H - PAD - BTN_H;
-  const BTN_Y = Math.max(BTN_Y_CALC, BTN_Y_PINNED - 20);
+ const BTN_H = 80;
+  const BTN_Y = CARD_H - PAD - BTN_H;
   const BTN_W = CARD_W - PAD * 2; // 1000px
 
   const pillWidth = config.label.length * 7.8 + 32;
