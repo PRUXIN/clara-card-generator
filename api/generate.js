@@ -308,7 +308,7 @@ module.exports = async function handler(req, res) {
 
   parts.push('<text x="' + PAD + '" y="' + STAT_Y + '" font-family="Inter,Arial,sans-serif" font-size="' + SUB_FONT + '" font-weight="500" fill="' + accent + '" letter-spacing="-0.5">' + painstat + '</text>');
 
-  parts.push('<rect x="' + PAD + '" y="' + BTN_Y + '" width="' + BTN_W + '" height="' + BTN_H + '" rx="24§§" fill="' + config.ctaColor + '"/>');
+  parts.push('<rect x="' + PAD + '" y="' + BTN_Y + '" width="' + BTN_W + '" height="' + BTN_H + '" rx="24" fill="' + config.ctaColor + '"/>');
   parts.push('<text x="' + (CARD_W / 2) + '" y="' + (BTN_Y + BTN_H / 2 + 9) + '" font-family="Inter,Arial,sans-serif" font-size="24" font-weight="700" fill="' + config.ctaTextColor + '" text-anchor="middle" letter-spacing="-0.5">' + cta.toUpperCase() + '</text>');
 
   parts.push('</svg>');
