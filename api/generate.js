@@ -179,7 +179,7 @@ module.exports = async function handler(req, res) {
   const BTN_Y_MAX  = CARD_H - PAD - BTN_H; // 960
   const BTN_Y = Math.min(BTN_Y_CALC, BTN_Y_MAX); // 881, leaves 119px — fix: use calc
 
-  const pillWidth = config.label.length * 7.8 + 32;
+  const pillWidth = config.label.length * 9.2 + 32;
   const grad1Start = isDark ? 'rgba(7,9,27,0)' : 'rgba(255,255,255,0)';
   const grad1End   = isDark ? '#07091B' : '#FFFFFF';
 
