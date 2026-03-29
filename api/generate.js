@@ -98,7 +98,22 @@ module.exports = async function handler(req, res) {
     parts.push('<text x="40" y="' + (headlineStartY + i * lineHeight) + '" font-family="Arial,sans-serif" font-size="46" font-weight="bold" fill="' + textColor + '" letter-spacing="-2">' + line + '</text>');
   });
 
-  parts.push('<text x="40" y="' + (headlineEndY + 30) + '" font-family="Arial,sans-serif" font-size="17" fill="' + subColor + '">' + subheadline + '</text>');
+  const subWords = subheadline.split(' ');
+let subLine1 = '';
+let subLine2 = '';
+let charCount = 0;
+subWords.forEach(function(word) {
+  if (charCount <= 45) {
+    subLine1 += (subLine1 ? ' ' : '') + word;
+    charCount += word.length + 1;
+  } else {
+    subLine2 += (subLine2 ? ' ' : '') + word;
+  }
+});
+parts.push('<text x="40" y="' + (headlineEndY + 30) + '" font-family="Arial,sans-serif" font-size="17" fill="' + subColor + '">' + subLine1 + '</text>');
+if (subLine2) {
+  parts.push('<text x="40" y="' + (headlineEndY + 55) + '" font-family="Arial,sans-serif" font-size="17" fill="' + subColor + '">' + subLine2 + '</text>');
+}
   parts.push('<text x="40" y="' + (headlineEndY + 68) + '" font-family="Arial,sans-serif" font-size="15" font-weight="bold" fill="' + accent + '">' + painstat + '</text>');
   parts.push('<rect x="40" y="' + (headlineEndY + 90) + '" width="230" height="48" rx="24" fill="' + config.ctaColor + '"/>');
   parts.push('<text x="155" y="' + (headlineEndY + 120) + '" font-family="Arial,sans-serif" font-size="13" font-weight="bold" fill="' + config.ctaTextColor + '" text-anchor="middle" letter-spacing="0.5">' + cta.toUpperCase() + '</text>');
