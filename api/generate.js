@@ -237,8 +237,8 @@ module.exports = async function handler(req, res) {
   const PILL_H = 37;
   const pillWidth = config.label.length * 9.2 + 32;
 
-  const HL_FONT = 64;
-  const HL_LINE_H = 78;
+  const HL_FONT = 56;
+  const HL_LINE_H = 68;
   const HEADLINE_Y = PILL_Y + PILL_H + 16 + HL_FONT;              // 682
   const HEADLINE_END = HEADLINE_Y + (lines.length - 1) * HL_LINE_H;
 
