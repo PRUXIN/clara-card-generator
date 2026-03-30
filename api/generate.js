@@ -15,7 +15,7 @@ module.exports = async function handler(req, res) {
   };
 
   const config = industryConfig[industry.toLowerCase()] || industryConfig['accountants'];
-  const isDark = theme === 'dark';
+  const isDark = theme.toLowerCase() === 'dark';
   const bg = isDark ? '#07091A' : '#FFFFFF';
   const textColor = isDark ? '#FFFFFF' : '#0A0508';
   const subColor = isDark ? '#AAAACC' : '#444444';
@@ -90,7 +90,7 @@ module.exports = async function handler(req, res) {
 
   const lines = splitHeadline(headline);
   const isInstagram = platform === 'instagram';
-  const subLines = splitSub(subheadline, isInstagram ? 50 : 45);
+  const subLines = splitSub(subheadline, isInstagram ? 80 : 45);
 
 // ── LINKEDIN / FACEBOOK (1200×628) ─────────────────────
   if (!isInstagram) {
@@ -296,7 +296,7 @@ module.exports = async function handler(req, res) {
 
   parts.push('<rect x="' + PAD + '" y="' + PILL_Y + '" width="' + pillWidth + '" height="' + PILL_H + '" rx="17" fill="none" stroke="' + accent + '" stroke-width="1.5"/>');
   parts.push('<text x="' + (PAD + pillWidth / 2) + '" y="' + (PILL_Y + PILL_H / 2 + 5) + '" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="700" fill="' + accent + '" text-anchor="middle" letter-spacing="1">' + config.label + '</text>');
-  parts.push('<text x="' + (CARD_W - PAD) + '" y="' + (PILL_Y + PILL_H / 2 + 5) + '" font-family="Inter,Arial,sans-serif" font-size="16" font-weight="600" fill="#B4C9EB" text-anchor="end" text-decoration="underline" letter-spacing="-0.5">pruxin.com/clara</text>');
+  parts.push('<text x="' + (CARD_W - PAD) + '" y="' + (PILL_Y + PILL_H / 2 + 5) + '" font-family="Inter,Arial,sans-serif" font-size="16" font-weight="600" fill="' + urlColor + '" text-anchor="end" text-decoration="underline" letter-spacing="-0.5">pruxin.com/clara</text>');
 
   lines.forEach(function(line, i) {
     parts.push('<text x="' + PAD + '" y="' + (HEADLINE_Y + i * HL_LINE_H) + '" font-family="Inter,Arial,sans-serif" font-size="' + HL_FONT + '" font-weight="700" fill="' + textColor + '" letter-spacing="-2">' + line + '</text>');
