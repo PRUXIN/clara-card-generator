@@ -1,3 +1,5 @@
+const sharp = require('sharp');
+
 module.exports = async function handler(req, res) {
   const industry = req.query.industry || 'accountants';
   const theme = req.query.theme || 'dark';
@@ -23,29 +25,50 @@ module.exports = async function handler(req, res) {
   const accent = config.accent;
   const baseUrl = 'https://raw.githubusercontent.com/PRUXIN/clara-card-generator/main/assets';
 
+  async function fetchBase64(filename, isBackground) {
+    try {
+      const r = await fetch(baseUrl + '/' + encodeURIComponent(filename));
+      const ab = await r.arrayBuffer();
+      const buffer = Buffer.from(ab);
+      let compressed;
+      if (isBackground) {
+        compressed = await sharp(buffer)
+          .resize(800, null, { withoutEnlargement: true })
+          .jpeg({ quality: 50 })
+          .toBuffer();
+        return 'data:image/jpeg;base64,' + compressed.toString('base64');
+      } else {
+        compressed = await sharp(buffer)
+          .resize(400, null, { withoutEnlargement: true })
+          .png({ compressionLevel: 9 })
+          .toBuffer();
+        return 'data:image/png;base64,' + compressed.toString('base64');
+      }
+    } catch (e) { return null; }
+  }
+
   const overlayFileMap = {
-  'accountants': 'overlay-accountants.png',
-  'legal':       isDark ? 'overlay-legal-dark.png'       : 'overlay-legal-light.png',
-  'realestate':  'overlay-realestate.png',
-  'restaurants': isDark ? 'overlay-restaurants-dark.png' : 'overlay-restaurants-light.png'
-};
+    'accountants': 'overlay-accountants.png',
+    'legal':       isDark ? 'overlay-legal-dark.png'       : 'overlay-legal-light.png',
+    'realestate':  'overlay-realestate.png',
+    'restaurants': isDark ? 'overlay-restaurants-dark.png' : 'overlay-restaurants-light.png'
+  };
 
-const logoFile = isDark ? 'clara-logo-light.png' : 'clara-logo-dark.png';
+  const logoFile = isDark ? 'clara-logo-light.png' : 'clara-logo-dark.png';
 
-const bgBase64 = baseUrl + '/' + encodeURIComponent(config.file);
-const logoBase64 = baseUrl + '/' + encodeURIComponent(logoFile);
-const overlayBase64 = baseUrl + '/' + encodeURIComponent(overlayFileMap[industry.toLowerCase()]);
-  
-  // isInstagram must be defined before splitHeadline
+  const [bgBase64, logoBase64, overlayBase64] = await Promise.all([
+    fetchBase64(config.file, true),
+    fetchBase64(logoFile, false),
+    fetchBase64(overlayFileMap[industry.toLowerCase()], false)
+  ]);
+
   const isInstagram = platform === 'instagram';
 
-  // Headline split
   function splitHeadline(text) {
     const stripped = text.replace(/\.$/, '');
     if (stripped.includes('.')) {
       const sentences = text.split('.').filter(function(s) { return s.trim(); }).map(function(s) { return s.trim() + '.'; });
       if (isInstagram) {
-        // Merge short consecutive sentences onto same line if combined <= 6 words
         const merged = [];
         let current = '';
         sentences.forEach(function(sentence) {
@@ -73,7 +96,6 @@ const overlayBase64 = baseUrl + '/' + encodeURIComponent(overlayFileMap[industry
     return result;
   }
 
-  // Subheadline split
   function splitSub(text, maxChars) {
     const words = text.split(' ');
     const result = [];
@@ -100,7 +122,6 @@ const overlayBase64 = baseUrl + '/' + encodeURIComponent(overlayFileMap[industry
     const CARD_H = 628;
     const PAD = 40;
 
-    // LinkedIn: each sentence on its own line if <=3 words, otherwise split every 3 words
     function liSplit(text) {
       const result = [];
       const stripped = text.replace(/\.$/, '');
@@ -126,41 +147,26 @@ const overlayBase64 = baseUrl + '/' + encodeURIComponent(overlayFileMap[industry
     }
     const liLines = liSplit(headline);
 
-    // Logo — sits ABOVE content zone, outside it
     const LOGO_Y = 16;
     const LOGO_H = 42;
-
-    // Content zone
-    const CZ_TOP = LOGO_Y + LOGO_H + 14;   // 72
-    const CZ_BOTTOM = CARD_H - 16;          // 612
-
-    // Image — right side, full content zone height
+    const CZ_TOP = LOGO_Y + LOGO_H + 14;
+    const CZ_BOTTOM = CARD_H - 16;
     const IMG_X = 600;
     const IMG_Y = CZ_TOP;
     const IMG_W = 584;
-    const IMG_H = CZ_BOTTOM - CZ_TOP;       // 540
-
-    // Pill: 16px inside content zone
-    const PILL_Y = CZ_TOP + 16;             // 88
+    const IMG_H = CZ_BOTTOM - CZ_TOP;
+    const PILL_Y = CZ_TOP + 16;
     const PILL_H = 34;
     const pillWidth = config.label.length * 7.5 + 32;
-
-    // Headline: 16px below pill + 46px baseline
     const HL_FONT = 46;
     const HL_LINE_H = 56;
     const HEADLINE_Y = PILL_Y + PILL_H + 16 + HL_FONT;
     const HEADLINE_END = HEADLINE_Y + (liLines.length - 1) * HL_LINE_H;
-
-    // Subheadline: 28px below headline
     const SUB_FONT = 17;
     const SUB_LINE_H = 26;
     const SUB_Y = HEADLINE_END + 28 + SUB_FONT;
     const lastSubY = subLines.length > 1 ? SUB_Y + (subLines.length - 1) * SUB_LINE_H : SUB_Y;
-
-    // Stat: 32px below last sub line
     const STAT_Y = lastSubY + 32 + 15;
-
-    // URL pinned 40px from card bottom
     const BTN_H = 48;
     const BTN_W = 230;
     const URL_Y = CARD_H - PAD;
@@ -230,12 +236,12 @@ const overlayBase64 = baseUrl + '/' + encodeURIComponent(overlayFileMap[industry
   const LOGO_Y = PAD;
   const LOGO_H = 42;
   const IMG_X = PAD;
-  const IMG_Y = LOGO_Y + LOGO_H + GAP;         // 102
+  const IMG_Y = LOGO_Y + LOGO_H + GAP;
   const IMG_W = 1000;
   const IMG_H = 435;
-  const IMG_BOTTOM = IMG_Y + IMG_H;             // 537
+  const IMG_BOTTOM = IMG_Y + IMG_H;
 
-  const PILL_Y = IMG_BOTTOM + GAP;              // 557
+  const PILL_Y = IMG_BOTTOM + GAP;
   const PILL_H = 37;
   const pillWidth = config.label.length * 9.2 + 32;
 
@@ -252,7 +258,7 @@ const overlayBase64 = baseUrl + '/' + encodeURIComponent(overlayFileMap[industry
 
   const BTN_H = 80;
   const BTN_W = CARD_W - PAD * 2;
-  const BTN_Y = CARD_H - PAD - BTN_H;          // always 960
+  const BTN_Y = CARD_H - PAD - BTN_H;
 
   const grad1End = isDark ? '#07091B' : '#FFFFFF';
 
