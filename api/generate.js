@@ -23,35 +23,19 @@ module.exports = async function handler(req, res) {
   const accent = config.accent;
   const baseUrl = 'https://raw.githubusercontent.com/PRUXIN/clara-card-generator/main/assets';
 
-  async function fetchBase64(filename) {
-    try {
-      const r = await fetch(baseUrl + '/' + encodeURIComponent(filename));
-      const ab = await r.arrayBuffer();
-      const bytes = new Uint8Array(ab);
-      let bin = '';
-      const chunk = 1024;
-      for (let i = 0; i < bytes.length; i += chunk) {
-        bin += String.fromCharCode(...bytes.subarray(i, i + chunk));
-      }
-      const ext = filename.endsWith('.jpg') ? 'jpeg' : 'png';
-      return 'data:image/' + ext + ';base64,' + btoa(bin);
-    } catch (e) { return null; }
-  }
-
   const overlayFileMap = {
-    'accountants': 'overlay-accountants.png',
-    'legal':       isDark ? 'overlay-legal-dark.png'       : 'overlay-legal-light.png',
-    'realestate':  'overlay-realestate.png',
-    'restaurants': isDark ? 'overlay-restaurants-dark.png' : 'overlay-restaurants-light.png'
-  };
+  'accountants': 'overlay-accountants.png',
+  'legal':       isDark ? 'overlay-legal-dark.png'       : 'overlay-legal-light.png',
+  'realestate':  'overlay-realestate.png',
+  'restaurants': isDark ? 'overlay-restaurants-dark.png' : 'overlay-restaurants-light.png'
+};
 
-  const logoFile = isDark ? 'clara-logo-light.png' : 'clara-logo-dark.png';
-  const [bgBase64, logoBase64, overlayBase64] = await Promise.all([
-    fetchBase64(config.file),
-    fetchBase64(logoFile),
-    fetchBase64(overlayFileMap[industry.toLowerCase()])
-  ]);
+const logoFile = isDark ? 'clara-logo-light.png' : 'clara-logo-dark.png';
 
+const bgBase64 = baseUrl + '/' + encodeURIComponent(config.file);
+const logoBase64 = baseUrl + '/' + encodeURIComponent(logoFile);
+const overlayBase64 = baseUrl + '/' + encodeURIComponent(overlayFileMap[industry.toLowerCase()]);
+  
   // isInstagram must be defined before splitHeadline
   const isInstagram = platform === 'instagram';
 
